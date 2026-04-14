@@ -2,30 +2,35 @@
 <html lang="de">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>FoxTV - EPG & Programm</title>
     <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { background-color: #0f172a; color: #f8fafc; font-family: sans-serif; }
-        .channel-card { transition: all 0.2s ease; border: 1px solid transparent; }
-        .channel-card:hover { transform: scale(1.02); background-color: #1e293b; border-color: #f97316; }
-        .active-channel { background-color: #1e293b; border-color: #f97316; box-shadow: 0 0 10px rgba(249, 115, 22, 0.3); }
+        body { background-color: #0f172a; color: #f8fafc; font-family: sans-serif; -webkit-tap-highlight-color: transparent; }
+        
+        /* Custom Scrollbar */
         .custom-scrollbar::-webkit-scrollbar { width: 5px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: #0f172a; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
-        #video-container { box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
-        .profile-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative; }
-        .profile-card:hover { border-color: #f97316; background-color: #1e293b; transform: translateY(-5px); }
-        .setup-card { background-color: #151f32; border: 1px solid #2d3748; }
-        .lang-button { background-color: #1a243a; border: 1px solid #2d3748; transition: all 0.2s; }
-        .lang-button:hover { border-color: #4a5568; background-color: #1e2945; }
-        .progress-bar { height: 3px; background: #334155; border-radius: 2px; overflow: hidden; margin-top: 4px; }
-        .progress-fill { height: 100%; background: #f97316; transition: width 0.5s ease; }
+
+        /* Mobile specific adjustments */
+        @media (max-width: 1024px) {
+            .main-container { overflow-y: auto !important; height: auto !important; }
+            .sidebar { height: auto !important; border-l: none !important; border-t: 1px solid #1e293b; }
+        }
+
+        .channel-card { transition: all 0.2s ease; border: 1px solid transparent; }
+        .channel-card:active { transform: scale(0.98); background-color: #1e293b; }
+        .active-channel { background-color: #1e293b; border-color: #f97316; box-shadow: 0 0 10px rgba(249, 115, 22, 0.3); }
         
-        .nav-settings-btn { color: #94a3b8; transition: all 0.2s; }
-        .nav-settings-btn:hover { color: #f97316; transform: rotate(30deg); }
-        .modal-backdrop { background-color: rgba(0, 0, 0, 0.8); backdrop-filter: blur(4px); }
+        #video-container { box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        
+        .profile-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .setup-card { background-color: #151f32; border: 1px solid #2d3748; }
+        
+        .progress-bar { height: 4px; background: #334155; border-radius: 2px; overflow: hidden; }
+        .progress-fill { height: 100%; background: #f97316; transition: width 0.5s ease; }
     </style>
 </head>
 <body class="h-screen overflow-hidden flex flex-col">
@@ -33,167 +38,145 @@
     <!-- Profil & Sprach-Auswahl Overlay -->
     <div id="setup-overlay" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950 p-4 overflow-y-auto">
         <!-- Schritt 1: Sprache -->
-        <div id="step-language" class="setup-card p-10 rounded-[40px] max-w-2xl w-full text-center shadow-2xl">
-            <h2 class="text-4xl font-bold mb-2 text-white italic">Fox<span class="text-orange-500">TV</span></h2>
-            <p class="text-slate-400 mb-10 text-sm tracking-widest uppercase">Sprache wählen</p>
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <button onclick="selectLanguage('de')" class="lang-button p-4 rounded-3xl flex flex-col items-center gap-3"><span class="text-3xl">🇩🇪</span><span class="font-semibold text-white text-sm">Deutsch</span></button>
-                <button onclick="selectLanguage('en')" class="lang-button p-4 rounded-3xl flex flex-col items-center gap-3"><span class="text-3xl">🇺🇸</span><span class="font-semibold text-white text-sm">English</span></button>
-                <button onclick="selectLanguage('fr')" class="lang-button p-4 rounded-3xl flex flex-col items-center gap-3"><span class="text-3xl">🇫🇷</span><span class="font-semibold text-white text-sm">Français</span></button>
-                <button onclick="selectLanguage('es')" class="lang-button p-4 rounded-3xl flex flex-col items-center gap-3"><span class="text-3xl">🇪🇸</span><span class="font-semibold text-white text-sm">Español</span></button>
+        <div id="step-language" class="setup-card p-6 md:p-10 rounded-[30px] md:rounded-[40px] max-w-2xl w-full text-center shadow-2xl">
+            <h2 class="text-3xl md:text-4xl font-bold mb-2 text-white italic">Fox<span class="text-orange-500">TV</span></h2>
+            <p class="text-slate-400 mb-8 text-xs tracking-widest uppercase font-bold">Sprache wählen</p>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 md:gap-4">
+                <button onclick="selectLanguage('de')" class="bg-slate-900/50 border border-slate-700 p-4 rounded-2xl flex flex-col items-center gap-2 hover:border-orange-500 transition-all"><span class="text-2xl">🇩🇪</span><span class="font-semibold text-white text-xs">Deutsch</span></button>
+                <button onclick="selectLanguage('en')" class="bg-slate-900/50 border border-slate-700 p-4 rounded-2xl flex flex-col items-center gap-2 hover:border-orange-500 transition-all"><span class="text-2xl">🇺🇸</span><span class="font-semibold text-white text-xs">English</span></button>
+                <button onclick="selectLanguage('fr')" class="bg-slate-900/50 border border-slate-700 p-4 rounded-2xl flex flex-col items-center gap-2 hover:border-orange-500 transition-all"><span class="text-2xl">🇫🇷</span><span class="font-semibold text-white text-xs">Français</span></button>
+                <button onclick="selectLanguage('es')" class="bg-slate-900/50 border border-slate-700 p-4 rounded-2xl flex flex-col items-center gap-2 hover:border-orange-500 transition-all"><span class="text-2xl">🇪🇸</span><span class="font-semibold text-white text-xs">Español</span></button>
             </div>
         </div>
 
         <!-- Schritt 2: Profil -->
-        <div id="step-profile" class="hidden setup-card p-10 rounded-[40px] max-w-5xl w-full text-center shadow-2xl">
-            <h2 id="profile-title" class="text-3xl font-bold mb-8 text-white">Wer schaut gerade?</h2>
-            <div id="profile-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6"></div>
+        <div id="step-profile" class="hidden setup-card p-6 md:p-10 rounded-[30px] md:rounded-[40px] max-w-5xl w-full text-center shadow-2xl">
+            <h2 id="profile-title" class="text-2xl md:text-3xl font-bold mb-8 text-white">Wer schaut gerade?</h2>
+            <div id="profile-grid" class="grid grid-cols-2 sm:grid-cols-3 gap-4 md:gap-6"></div>
         </div>
 
         <!-- Schritt 3: PIN -->
-        <div id="step-pin" class="hidden setup-card p-10 rounded-[40px] max-w-xs w-full text-center shadow-2xl">
-            <h2 id="pin-title" class="text-2xl font-bold mb-4 text-white">PIN eingeben</h2>
-            <input type="password" id="pin-input" maxlength="8" placeholder="••••" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-4 text-center text-2xl tracking-[0.2em] text-white focus:outline-none focus:ring-2 focus:ring-orange-500">
-            <p id="first-time-hint" class="mt-4 text-[10px] text-slate-600 italic">Standard PIN: 1234</p>
-            <button onclick="checkPin()" id="btn-login" class="w-full mt-4 bg-orange-600 p-4 rounded-xl font-bold text-white hover:bg-orange-700 shadow-lg">Einloggen</button>
-            <button onclick="goBackToProfiles()" class="text-xs text-slate-500 mt-6 hover:underline uppercase font-bold tracking-widest">Zurück</button>
-        </div>
-    </div>
-
-    <!-- Einstellungs-Menü (Modal) -->
-    <div id="settings-modal" class="hidden fixed inset-0 z-[60] flex items-center justify-center modal-backdrop p-4">
-        <div class="setup-card p-8 rounded-[30px] max-w-sm w-full shadow-2xl relative">
-            <button onclick="toggleSettings(false)" class="absolute top-4 right-4 text-slate-500 hover:text-white">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
-            </button>
-            <h2 class="text-2xl font-bold mb-6 text-white flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                Einstellungen
-            </h2>
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-xs font-bold text-slate-500 uppercase mb-2 tracking-wider">Admin PIN ändern</label>
-                    <input type="password" id="new-pin-input" placeholder="Neue PIN" maxlength="8" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-3 text-white outline-none focus:ring-2 focus:ring-orange-500 mb-2">
-                    <button onclick="saveNewPin()" class="w-full bg-orange-600 p-3 rounded-xl font-bold text-white hover:bg-orange-700 transition-colors">Speichern</button>
-                    <p id="settings-msg" class="text-[10px] mt-2 text-center text-green-500"></p>
-                </div>
-            </div>
+        <div id="step-pin" class="hidden setup-card p-8 rounded-[30px] max-w-xs w-full text-center shadow-2xl">
+            <h2 class="text-xl font-bold mb-4 text-white">PIN eingeben</h2>
+            <input type="password" id="pin-input" inputmode="numeric" maxlength="8" placeholder="••••" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-4 text-center text-2xl tracking-[0.2em] text-white focus:outline-none focus:ring-2 focus:ring-orange-500">
+            <button onclick="checkPin()" class="w-full mt-4 bg-orange-600 p-4 rounded-xl font-bold text-white hover:bg-orange-700">Einloggen</button>
+            <button onclick="goBackToProfiles()" class="text-xs text-slate-500 mt-6 uppercase font-bold tracking-widest">Zurück</button>
         </div>
     </div>
 
     <!-- Navbar -->
-    <nav class="bg-slate-900 border-b border-slate-800 px-6 py-4 flex flex-wrap justify-between items-center gap-4">
-        <div class="flex items-center gap-4">
-            <!-- HAUS BUTTON (REPARIERT) -->
-            <button onclick="logout()" class="bg-slate-800 p-3 rounded-2xl hover:bg-orange-600 transition-all shadow-lg group" title="Hauptmenü">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white group-hover:scale-110 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <nav class="bg-slate-900 border-b border-slate-800 px-4 py-3 flex items-center justify-between gap-2 z-40">
+        <div class="flex items-center gap-3">
+            <button onclick="logout()" class="bg-slate-800 p-2.5 rounded-xl hover:bg-orange-600 transition-all">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
                     <polyline points="9 22 9 12 15 12 15 22"></polyline>
                 </svg>
             </button>
-            <div class="flex items-baseline gap-2">
-                <h1 class="text-xl font-bold tracking-tight">Fox<span class="text-orange-500">TV</span></h1>
-                <span id="nav-clock" class="text-sm font-mono text-slate-400 bg-slate-800/50 px-2 py-0.5 rounded border border-slate-700/50">00:00:00</span>
-            </div>
+            <h1 class="text-lg font-bold tracking-tight hidden sm:block">Fox<span class="text-orange-500">TV</span></h1>
         </div>
         
-        <div class="flex-1 max-w-md">
+        <div class="flex-1 max-w-[200px] sm:max-w-md">
             <div class="relative">
-                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-500">
-                    <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
-                </span>
-                <input type="text" id="search" placeholder="Sender suchen..." class="w-full bg-slate-800 border border-slate-700 rounded-full py-2 pl-10 pr-4 text-sm focus:ring-2 focus:ring-orange-500 outline-none text-white transition-all">
+                <input type="text" id="search" placeholder="Suchen..." class="w-full bg-slate-800 border border-slate-700 rounded-full py-2 pl-4 pr-4 text-xs focus:ring-2 focus:ring-orange-500 outline-none text-white transition-all">
             </div>
         </div>
 
-        <div class="flex items-center gap-4">
-            <div class="flex items-center gap-2 bg-slate-800/50 pl-1 pr-4 py-1 rounded-full border border-slate-700">
-                <div id="current-avatar-small" class="w-7 h-7 bg-slate-700 rounded-full flex items-center justify-center text-xs">🦊</div>
-                <div id="current-profile-indicator" class="text-xs font-bold text-white">Profil</div>
+        <div class="flex items-center gap-2">
+            <div class="flex items-center gap-2 bg-slate-800/50 p-1 rounded-full border border-slate-700 pr-3">
+                <div id="current-avatar-small" class="w-6 h-6 bg-slate-700 rounded-full flex items-center justify-center text-[10px]">🦊</div>
+                <div id="current-profile-indicator" class="text-[10px] font-bold text-white hidden xs:block">Profil</div>
             </div>
-            <button id="nav-settings-gear" onclick="toggleSettings(true)" class="nav-settings-btn p-2" title="Einstellungen">
-                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.1a2 2 0 0 1-1-1.72v-.51a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path>
-                    <circle cx="12" cy="12" r="3"></circle>
-                </svg>
+            <button id="nav-settings-gear" onclick="toggleSettings(true)" class="p-2 text-slate-400 hover:text-orange-500">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.1a2 2 0 0 1-1-1.72v-.51a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></svg>
             </button>
         </div>
     </nav>
 
-    <main class="flex-1 flex flex-col lg:flex-row overflow-hidden">
+    <main class="flex-1 flex flex-col lg:flex-row overflow-hidden main-container">
         <!-- Player Bereich -->
-        <div class="flex-1 flex flex-col bg-slate-950 p-4 lg:p-8 overflow-y-auto custom-scrollbar">
-            <div id="video-container" class="relative w-full aspect-video bg-black rounded-3xl overflow-hidden border border-slate-800 group shadow-2xl">
-                <video id="video" controls class="w-full h-full object-contain"></video>
+        <div id="main-view" class="flex-1 flex flex-col bg-slate-950 p-3 sm:p-4 lg:p-8 overflow-y-auto custom-scrollbar">
+            <div id="video-container" class="relative w-full aspect-video bg-black rounded-2xl md:rounded-3xl overflow-hidden border border-slate-800 shadow-2xl">
+                <video id="video" playsinline controls class="w-full h-full object-contain"></video>
                 <div id="player-overlay" class="absolute inset-0 flex flex-col items-center justify-center bg-slate-900/90 text-center p-6">
                     <div class="mb-4 text-orange-500 animate-pulse">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /><path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /><path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                     </div>
-                    <h2 id="overlay-text" class="text-xl font-medium text-slate-300">Wähle einen Sender aus der Liste</h2>
+                    <h2 class="text-sm md:text-xl font-medium text-slate-300">Sender wählen</h2>
                 </div>
             </div>
 
-            <div id="epg-display" class="mt-8 flex flex-col md:flex-row gap-6 items-start justify-between">
-                <div class="flex-1">
-                    <div class="flex items-center gap-3 mb-2">
-                        <span id="live-indicator" class="hidden px-2 py-0.5 bg-red-600 text-[10px] font-bold rounded uppercase animate-pulse">Live</span>
-                        <h2 id="current-name" class="text-3xl font-black text-white italic tracking-tight">FoxTV Live</h2>
+            <div id="epg-display" class="mt-6 flex flex-col md:flex-row gap-4 items-start justify-between">
+                <div class="flex-1 w-full">
+                    <div class="flex items-center gap-2 mb-2">
+                        <span id="live-indicator" class="hidden px-2 py-0.5 bg-red-600 text-[9px] font-bold rounded uppercase animate-pulse">Live</span>
+                        <h2 id="current-name" class="text-xl md:text-3xl font-black text-white italic truncate">FoxTV Live</h2>
                     </div>
-                    <div id="program-info" class="hidden">
-                        <h3 id="now-title" class="text-xl font-bold text-orange-500 mb-1">Sendung läuft...</h3>
-                        <div class="flex items-center gap-4 text-sm text-slate-400">
+                    <div id="program-info" class="hidden bg-slate-900/40 p-4 rounded-2xl border border-slate-800/50">
+                        <h3 id="now-title" class="text-base md:text-xl font-bold text-orange-500 mb-1">Sendung läuft...</h3>
+                        <div class="flex items-center gap-4 text-xs text-slate-400 mb-3">
                             <span id="now-time" class="font-mono">--:-- - --:--</span>
-                            <div class="w-32 progress-bar">
+                            <div class="flex-1 max-w-[150px] progress-bar">
                                 <div id="now-progress" class="progress-fill" style="width: 0%"></div>
                             </div>
                         </div>
-                        <p id="next-info" class="mt-4 text-sm text-slate-500">
-                            <span class="font-bold uppercase text-[10px] tracking-widest block mb-1">Danach:</span>
+                        <p id="next-info" class="text-xs text-slate-500">
+                            <span class="font-bold uppercase text-[9px] tracking-widest block mb-1">Danach:</span>
                             <span id="next-title" class="text-slate-300 font-semibold">Nächste Sendung</span> 
-                            <span id="next-time" class="ml-2 font-mono text-xs">--:--</span>
+                            <span id="next-time" class="ml-2 font-mono text-[10px]">--:--</span>
                         </p>
                     </div>
                 </div>
                 
-                <div class="flex gap-2">
-                    <button id="fav-btn" onclick="toggleFavorite()" class="hidden bg-slate-800 p-4 rounded-2xl hover:bg-slate-700 border border-slate-700 transition-all">
-                        <svg id="fav-icon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
-                        </svg>
+                <div id="fav-container" class="hidden">
+                    <button onclick="toggleFavorite()" class="bg-slate-800 p-3 rounded-xl border border-slate-700">
+                        <svg id="fav-icon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" /></svg>
                     </button>
                 </div>
             </div>
         </div>
 
-        <!-- Sidebar -->
-        <div class="w-full lg:w-96 bg-slate-900 border-l border-slate-800 flex flex-col shadow-xl">
-            <div class="p-4 border-b border-slate-800 bg-slate-900/50 flex justify-between items-center">
-                <div class="flex gap-2 text-[10px] font-bold uppercase tracking-widest">
-                    <button id="btn-all" onclick="setListFilter('all')" class="px-3 py-1 bg-orange-600 rounded-full text-white">Alle</button>
-                    <button id="btn-fav" onclick="setListFilter('fav')" class="hidden px-3 py-1 bg-slate-800 rounded-full border border-slate-700 text-slate-400">Favoriten</button>
+        <!-- Sidebar (Senderliste) -->
+        <div class="w-full lg:w-96 bg-slate-900 sidebar flex flex-col shadow-xl">
+            <div class="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-900/80 sticky top-0 z-10">
+                <div class="flex gap-2">
+                    <button id="btn-all" onclick="setListFilter('all')" class="px-3 py-1 bg-orange-600 rounded-full text-white text-[10px] font-bold uppercase tracking-wider">Alle</button>
+                    <button id="btn-fav" onclick="setListFilter('fav')" class="hidden px-3 py-1 bg-slate-800 rounded-full border border-slate-700 text-slate-400 text-[10px] font-bold uppercase tracking-wider">Favoriten</button>
                 </div>
-                <span id="count-tag" class="text-[10px] bg-slate-800 px-2 py-0.5 rounded text-slate-400">0</span>
+                <span id="count-tag" class="text-[9px] bg-slate-800 px-2 py-0.5 rounded text-slate-400 font-bold">0</span>
             </div>
             <div id="channel-list" class="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-2"></div>
         </div>
     </main>
 
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="hidden fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+        <div class="setup-card p-6 rounded-[30px] max-w-sm w-full relative">
+            <button onclick="toggleSettings(false)" class="absolute top-4 right-4 text-slate-500">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+            <h2 class="text-xl font-bold mb-6 text-white">Einstellungen</h2>
+            <div class="space-y-4">
+                <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest">Admin PIN ändern</label>
+                <input type="password" id="new-pin-input" placeholder="Neue PIN" maxlength="8" class="w-full bg-slate-800 border border-slate-700 rounded-xl p-3 text-white outline-none">
+                <button onclick="saveNewPin()" class="w-full bg-orange-600 p-3 rounded-xl font-bold text-white">Speichern</button>
+                <p id="settings-msg" class="text-[10px] text-center text-green-500"></p>
+            </div>
+        </div>
+    </div>
+
     <script>
         const translations = {
-            de: { status: "Live", search: "Sender suchen...", overlay: "Sender wählen", pTitle: "Wer schaut gerade?", m3u: "https://raw.githubusercontent.com/josxha/german-tv-m3u/main/german-tv.m3u" },
-            en: { status: "Live", search: "Search...", overlay: "Select Channel", pTitle: "Who is watching?", m3u: "https://iptv-org.github.io/iptv/countries/us.m3u" },
-            fr: { status: "Direct", search: "Chercher...", overlay: "Choisir", pTitle: "Qui regarde?", m3u: "https://iptv-org.github.io/iptv/countries/fr.m3u" },
-            es: { status: "En vivo", search: "Buscar...", overlay: "Elegir", pTitle: "¿Quién ve?", m3u: "https://iptv-org.github.io/iptv/countries/es.m3u" }
+            de: { status: "Live", search: "Suchen...", pTitle: "Wer schaut gerade?", m3u: "https://raw.githubusercontent.com/josxha/german-tv-m3u/main/german-tv.m3u" },
+            en: { status: "Live", search: "Search...", pTitle: "Who is watching?", m3u: "https://iptv-org.github.io/iptv/countries/us.m3u" },
+            fr: { status: "Direct", search: "Chercher...", pTitle: "Qui regarde?", m3u: "https://iptv-org.github.io/iptv/countries/fr.m3u" },
+            es: { status: "En vivo", search: "Buscar...", pTitle: "¿Quién ve?", m3u: "https://iptv-org.github.io/iptv/countries/es.m3u" }
         };
 
         const programTemplates = [
-            { title: "Fox News Spezial", duration: 60 },
-            { title: "Krimi: Spurensuche", duration: 45 },
-            { title: "Sport Live: Magazin", duration: 90 },
-            { title: "Natur-Doku", duration: 50 },
-            { title: "Spielfilm am Abend", duration: 120 },
-            { title: "Nachrichten", duration: 30 },
-            { title: "Cartoon Fun", duration: 25 }
+            { title: "Fox News Spezial", duration: 60 }, { title: "Krimi: Spurensuche", duration: 45 },
+            { title: "Sport Live: Magazin", duration: 90 }, { title: "Natur-Doku", duration: 50 },
+            { title: "Spielfilm am Abend", duration: 120 }, { title: "Nachrichten", duration: 30 }
         ];
 
         let currentLang = 'de';
@@ -204,51 +187,6 @@
         let listFilter = 'all';
         let hls = null;
         let adminPin = localStorage.getItem('foxtv_admin_pin') || "1234";
-
-        function updateClock() {
-            const now = new Date();
-            const clock = document.getElementById('nav-clock');
-            if(clock) clock.textContent = now.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-        }
-        setInterval(updateClock, 1000);
-        updateClock();
-
-        function getProgramForChannel(channelName) {
-            const now = new Date();
-            const minutesSinceMidnight = now.getHours() * 60 + now.getMinutes();
-            let seed = 0;
-            for(let i=0; i<channelName.length; i++) seed += channelName.charCodeAt(i);
-            const showIndex = (Math.floor(minutesSinceMidnight / 45) + seed) % programTemplates.length;
-            const currentShow = programTemplates[showIndex];
-            const nextShow = programTemplates[(showIndex + 1) % programTemplates.length];
-            const startMins = Math.floor(minutesSinceMidnight / currentShow.duration) * currentShow.duration;
-            const endMins = startMins + currentShow.duration;
-            const formatTime = (totalMins) => {
-                const h = Math.floor((totalMins % 1440) / 60).toString().padStart(2, '0');
-                const m = (totalMins % 60).toString().padStart(2, '0');
-                return `${h}:${m}`;
-            };
-            return {
-                now: currentShow.title,
-                nowTime: `${formatTime(startMins)} - ${formatTime(endMins)}`,
-                next: nextShow.title,
-                nextTime: formatTime(endMins),
-                progress: Math.min(100, Math.max(0, ((minutesSinceMidnight - startMins) / currentShow.duration) * 100))
-            };
-        }
-
-        function updateEPG() {
-            if (!activeChannel) return;
-            const info = getProgramForChannel(activeChannel.name);
-            document.getElementById('program-info').classList.remove('hidden');
-            document.getElementById('live-indicator').classList.remove('hidden');
-            document.getElementById('now-title').textContent = info.now;
-            document.getElementById('now-time').textContent = info.nowTime;
-            document.getElementById('now-progress').style.width = info.progress + '%';
-            document.getElementById('next-title').textContent = info.next;
-            document.getElementById('next-time').textContent = info.nextTime;
-        }
-        setInterval(updateEPG, 30000);
 
         function selectLanguage(lang) {
             currentLang = lang;
@@ -267,17 +205,15 @@
             ];
             profiles.forEach(p => {
                 const card = document.createElement('div');
-                card.className = 'profile-card border border-slate-800 p-8 rounded-3xl cursor-pointer bg-slate-900/50';
-                card.innerHTML = `<div class="w-20 h-20 bg-slate-700 rounded-full mx-auto mb-4 flex items-center justify-center text-4xl">${p.avatar}</div><span class="font-bold text-white">${p.name}</span>`;
+                card.className = 'profile-card border border-slate-800 p-6 rounded-2xl cursor-pointer bg-slate-900/50 text-center';
+                card.innerHTML = `<div class="w-16 h-16 bg-slate-700 rounded-full mx-auto mb-3 flex items-center justify-center text-3xl">${p.avatar}</div><span class="font-bold text-white text-sm">${p.name}</span>`;
                 card.onclick = () => {
                     if (p.secure) {
                         document.getElementById('step-profile').classList.add('hidden');
                         document.getElementById('step-pin').classList.remove('hidden');
                         window.targetProfile = p;
                         document.getElementById('pin-input').value = '';
-                    } else {
-                        finalizeLogin(p);
-                    }
+                    } else finalizeLogin(p);
                 };
                 grid.appendChild(card);
             });
@@ -287,7 +223,7 @@
             if (document.getElementById('pin-input').value === adminPin) finalizeLogin(window.targetProfile);
             else {
                 document.getElementById('pin-input').classList.add('ring-2', 'ring-red-500');
-                setTimeout(() => document.getElementById('pin-input').classList.remove('ring-2', 'ring-red-500'), 1000);
+                setTimeout(() => document.getElementById('pin-input').classList.remove('ring-2', 'ring-red-500'), 800);
             }
         }
 
@@ -297,45 +233,32 @@
             document.getElementById('current-profile-indicator').textContent = profile.name;
             document.getElementById('current-avatar-small').textContent = profile.avatar;
             
-            const gear = document.getElementById('nav-settings-gear');
-            const favBar = document.getElementById('btn-fav');
-            const favBtn = document.getElementById('fav-btn');
-
-            if(currentUserType === 'admin') {
-                gear.style.display = "block";
-                favBar.classList.remove('hidden');
-                favBtn.classList.remove('hidden');
-            } else {
-                gear.style.display = "none";
-                favBar.classList.add('hidden');
-                favBtn.classList.add('hidden');
-                listFilter = 'all'; 
-            }
+            const isAdm = currentUserType === 'admin';
+            document.getElementById('nav-settings-gear').style.display = isAdm ? "block" : "none";
+            document.getElementById('btn-fav').classList.toggle('hidden', !isAdm);
+            document.getElementById('fav-container').classList.toggle('hidden', !isAdm);
+            
             init(translations[currentLang].m3u);
         }
 
-        function toggleSettings(show) { document.getElementById('settings-modal').classList.toggle('hidden', !show); }
-        function saveNewPin() {
-            const val = document.getElementById('new-pin-input').value;
-            if(val.length >= 4) {
-                adminPin = val; localStorage.setItem('foxtv_admin_pin', val);
-                document.getElementById('settings-msg').textContent = "Gespeichert!";
-                setTimeout(() => { toggleSettings(false); document.getElementById('settings-msg').textContent = ""; }, 1000);
-            }
-        }
-
         async function init(url) {
-            const res = await fetch(url);
-            allChannels = parseM3U(await res.text());
-            renderChannels(allChannels);
+            try {
+                const res = await fetch(url);
+                const text = await res.text();
+                allChannels = parseM3U(text);
+                renderChannels(allChannels);
+            } catch (e) { console.error("Load failed", e); }
         }
 
         function parseM3U(content) {
             const channels = [];
             let current = null;
             content.split('\n').forEach(line => {
-                if (line.startsWith('#EXTINF:')) current = { name: line.split(',').pop().trim(), logo: line.match(/tvg-logo="([^"]+)"/)?.[1] };
-                else if (line.startsWith('http') && current) { current.url = line; channels.push(current); current = null; }
+                if (line.startsWith('#EXTINF:')) {
+                    current = { name: line.split(',').pop().trim(), logo: line.match(/tvg-logo="([^"]+)"/)?.[1] };
+                } else if (line.startsWith('http') && current) {
+                    current.url = line; channels.push(current); current = null;
+                }
             });
             return channels;
         }
@@ -344,14 +267,18 @@
             const list = document.getElementById('channel-list');
             list.innerHTML = '';
             let filtered = items;
-            if (listFilter === 'fav' && currentUserType === 'admin') filtered = items.filter(c => favorites.includes(c.name));
+            if (listFilter === 'fav') filtered = items.filter(c => favorites.includes(c.name));
             document.getElementById('count-tag').textContent = filtered.length;
+            
             filtered.forEach(c => {
-                const info = getProgramForChannel(c.name);
+                const isFav = favorites.includes(c.name);
                 const card = document.createElement('div');
-                card.className = `channel-card p-3 rounded-2xl cursor-pointer bg-slate-800/30 border-l-4 ${favorites.includes(c.name) && currentUserType === 'admin' ? 'border-l-orange-500' : 'border-l-transparent'}`;
-                card.innerHTML = `<div class="flex items-center gap-3"><div class="w-10 h-10 bg-slate-700 rounded-lg flex items-center justify-center text-[10px] font-bold overflow-hidden">${c.logo ? `<img src="${c.logo}" class="w-full h-full object-cover">` : c.name.slice(0,2)}</div><div class="flex-1 min-w-0"><p class="text-xs font-bold truncate text-white uppercase">${c.name}</p><p class="text-[10px] text-slate-500 truncate mt-0.5 italic">${info.now}</p></div></div>`;
-                card.onclick = () => play(c, card);
+                card.className = `channel-card p-3 rounded-xl cursor-pointer bg-slate-800/40 border-l-4 ${isFav ? 'border-l-orange-500' : 'border-l-transparent'}`;
+                card.innerHTML = `<div class="flex items-center gap-3"><div class="w-10 h-10 bg-slate-700 rounded-lg flex-shrink-0 flex items-center justify-center overflow-hidden">${c.logo ? `<img src="${c.logo}" class="w-full h-full object-cover">` : `<span class="text-[10px] text-white">${c.name.slice(0,2)}</span>`}</div><div class="flex-1 min-w-0"><p class="text-xs font-bold truncate text-white uppercase tracking-tighter">${c.name}</p></div></div>`;
+                card.onclick = () => {
+                    play(c, card);
+                    if (window.innerWidth < 1024) document.getElementById('main-view').scrollIntoView({ behavior: 'smooth' });
+                };
                 list.appendChild(card);
             });
         }
@@ -363,56 +290,78 @@
             document.getElementById('player-overlay').classList.add('hidden');
             document.getElementById('current-name').textContent = channel.name;
             updateEPG(); updateFavIcon();
+            
             const video = document.getElementById('video');
             if (hls) hls.destroy();
-            if (Hls.isSupported()) { hls = new Hls(); hls.loadSource(channel.url); hls.attachMedia(video); hls.on(Hls.Events.MANIFEST_PARSED, () => video.play()); }
-            else { video.src = channel.url; video.play(); }
+            if (Hls.isSupported()) {
+                hls = new Hls(); hls.loadSource(channel.url); hls.attachMedia(video);
+                hls.on(Hls.Events.MANIFEST_PARSED, () => video.play().catch(e => console.log("Autoplay blocked")));
+            } else {
+                video.src = channel.url; video.play().catch(e => console.log("Autoplay blocked"));
+            }
+        }
+
+        function getProgramForChannel(name) {
+            let seed = 0; for(let i=0; i<name.length; i++) seed += name.charCodeAt(i);
+            const now = new Date();
+            const mins = now.getHours() * 60 + now.getMinutes();
+            const showIdx = (Math.floor(mins/45) + seed) % programTemplates.length;
+            const cur = programTemplates[showIdx];
+            const start = Math.floor(mins / cur.duration) * cur.duration;
+            const fmt = (m) => `${Math.floor((m%1440)/60).toString().padStart(2,'0')}:${(m%60).toString().padStart(2,'0')}`;
+            return { now: cur.title, nowTime: `${fmt(start)} - ${fmt(start+cur.duration)}`, progress: ((mins-start)/cur.duration)*100 };
+        }
+
+        function updateEPG() {
+            if (!activeChannel) return;
+            const info = getProgramForChannel(activeChannel.name);
+            document.getElementById('program-info').classList.remove('hidden');
+            document.getElementById('live-indicator').classList.remove('hidden');
+            document.getElementById('now-title').textContent = info.now;
+            document.getElementById('now-time').textContent = info.nowTime;
+            document.getElementById('now-progress').style.width = info.progress + '%';
         }
 
         function toggleFavorite() {
-            if (!activeChannel || currentUserType !== 'admin') return;
             const idx = favorites.indexOf(activeChannel.name);
-            if (idx > -1) favorites.splice(idx, 1); else favorites.push(activeChannel.name);
+            if(idx > -1) favorites.splice(idx,1); else favorites.push(activeChannel.name);
             localStorage.setItem('foxtv_favs', JSON.stringify(favorites));
             updateFavIcon(); renderChannels(allChannels);
         }
-
         function updateFavIcon() {
+            if(!activeChannel) return;
+            const isF = favorites.includes(activeChannel.name);
             const icon = document.getElementById('fav-icon');
-            const isFav = activeChannel && favorites.includes(activeChannel.name) && currentUserType === 'admin';
-            icon.classList.toggle('text-orange-500', isFav); icon.setAttribute('fill', isFav ? 'currentColor' : 'none');
+            icon.classList.toggle('text-orange-500', isF);
+            icon.setAttribute('fill', isF ? 'currentColor' : 'none');
         }
 
-        function setListFilter(f) { 
-            listFilter = f; 
-            document.getElementById('btn-all').className = f === 'all' ? 'px-3 py-1 bg-orange-600 rounded-full text-white' : 'px-3 py-1 bg-slate-800 rounded-full border border-slate-700 text-slate-400';
-            document.getElementById('btn-fav').className = f === 'fav' ? 'px-3 py-1 bg-orange-600 rounded-full text-white' : 'px-3 py-1 bg-slate-800 rounded-full border border-slate-700 text-slate-400';
-            renderChannels(allChannels); 
+        function setListFilter(f) {
+            listFilter = f;
+            document.getElementById('btn-all').className = f==='all' ? 'px-3 py-1 bg-orange-600 rounded-full text-white text-[10px] font-bold uppercase tracking-wider' : 'px-3 py-1 bg-slate-800 rounded-full border border-slate-700 text-slate-400 text-[10px] font-bold uppercase tracking-wider';
+            document.getElementById('btn-fav').className = f==='fav' ? 'px-3 py-1 bg-orange-600 rounded-full text-white text-[10px] font-bold uppercase tracking-wider' : 'px-3 py-1 bg-slate-800 rounded-full border border-slate-700 text-slate-400 text-[10px] font-bold uppercase tracking-wider';
+            renderChannels(allChannels);
         }
-        
-        function goBackToProfiles() { document.getElementById('step-pin').classList.add('hidden'); document.getElementById('step-profile').classList.remove('hidden'); }
-        
-        // REPARIERT: Logout/Home Funktion
-        function logout() { 
-            // Stoppe Video
+
+        function logout() {
             const video = document.getElementById('video');
-            video.pause();
-            if(hls) hls.destroy();
-            
-            // UI Reset
+            video.pause(); if(hls) hls.destroy();
             document.getElementById('setup-overlay').classList.remove('hidden');
             document.getElementById('step-language').classList.remove('hidden');
             document.getElementById('step-profile').classList.add('hidden');
             document.getElementById('step-pin').classList.add('hidden');
             document.getElementById('player-overlay').classList.remove('hidden');
             document.getElementById('program-info').classList.add('hidden');
-            document.getElementById('current-name').textContent = "FoxTV Live";
-            
-            currentUserType = null;
-            activeChannel = null;
+            activeChannel = null; currentUserType = null;
         }
 
-        document.getElementById('search').addEventListener('input', (e) => renderChannels(allChannels.filter(c => c.name.toLowerCase().includes(e.target.value.toLowerCase()))));
+        function toggleSettings(s) { document.getElementById('settings-modal').classList.toggle('hidden', !s); }
+        function saveNewPin() {
+            const v = document.getElementById('new-pin-input').value;
+            if(v.length >= 4) { adminPin = v; localStorage.setItem('foxtv_admin_pin', v); document.getElementById('settings-msg').textContent = "Gespeichert!"; setTimeout(() => toggleSettings(false), 1000); }
+        }
+        function goBackToProfiles() { document.getElementById('step-pin').classList.add('hidden'); document.getElementById('step-profile').classList.remove('hidden'); }
+        document.getElementById('search').addEventListener('input', e => renderChannels(allChannels.filter(c => c.name.toLowerCase().includes(e.target.value.toLowerCase()))));
     </script>
 </body>
 </html>
